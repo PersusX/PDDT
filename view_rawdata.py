@@ -5,11 +5,15 @@ import math
 import argparse
 import numpy as np
 from astropy.io import fits
+import sklearn.cluster as sc
 import matplotlib.pyplot as plt
 from scipy import sparse
 from scipy.sparse.linalg import spsolve
 from scipy.signal import argrelextrema
 from scipy.signal import correlate
+from sklearn.cluster import KMeans
+from sklearn.mixture import GaussianMixture
+from sklearn.datasets import make_classification
 from Dedispersion import Dedispersion as dds
 from FoldDataArchive import FoldFitsArchive as fda
 from PsrFitsArchive import FITSArchive as pfa
@@ -340,6 +344,9 @@ class ViewPulse(QMainWindow):
         '''
         
         '''
+        self.freq_order = self.check_order(self.dat_freq)
+        
+        
         if self.npol > 1:
             self.init_data = self.arch.obsdata
             del self.arch.obsdata
@@ -353,9 +360,14 @@ class ViewPulse(QMainWindow):
             self.init_data = np.transpose(self.init_data, (1,0,2)).astype(np.float64)
         
 
+        if self.freq_order == False:
+            self.dat_freq = self.dat_freq[::-1]
+
+            self.init_data = np.flip(self.init_data, axis=0)
+
+
         # scale and subbase with subint
         for isub in range(self.nsubint):
-            
             pulse_profile = np.mean(self.init_data[:,isub,:],axis=0)
             offset_stt,offset_end = self.offset_determine(pulse_profile,self.nsampsubint//8)
             
@@ -373,6 +385,28 @@ class ViewPulse(QMainWindow):
  
         #sys.exit(1)
  
+ 
+    def check_order(self,lst):
+        '''
+        Determine whether the frequencies are in ascending or descending order
+        '''
+        # Ascending by default
+        as_order = True
+        # If the list is 1 or less, it's sorted by all means
+        if len(lst) <= 1:
+            return as_order
+        # check ascending order
+        if all(lst[i] <= lst[i+1] for i in range(len(lst)-1)):
+            return as_order
+
+        # check for descending order
+        if all(lst[i] >= lst[i+1] for i in range(len(lst)-1)):
+            as_order = False
+            return as_order
+
+        print("Eroror: Please check that the DAT_FREQ is correct!")
+        sys.exit(1)
+
  
 
     def downsample_chan(self, arr, down_rate):
@@ -492,7 +526,6 @@ class ViewPulse(QMainWindow):
             #    self.data = np.sum(np.mean(self.arch.obsdata,axis=0)[:2],axis=0)
             #else:
             self.data = np.mean(self.init_data,axis=1)
-            
             
             self.pulse_profile = np.mean(self.data,axis=0)
             self.offset_start,self.offset_end = self.offset_determine(self.pulse_profile, self.nsampsubint//8)
