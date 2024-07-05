@@ -362,7 +362,8 @@ class ViewPulse(QMainWindow):
 
         if self.freq_order == False:
             self.dat_freq = self.dat_freq[::-1]
-
+            
+            
             self.init_data = np.flip(self.init_data, axis=0)
 
 
@@ -1025,10 +1026,10 @@ class ViewPulse(QMainWindow):
         '''
         # Reference frequency, using the highest frequency
         #freq_ref = freqs[len(freqs)//2]
-        freq_ref = max(self.arch.dat_freq[0])
+        freq_ref = max(self.dat_freq)
         #print("the reference frequency:",freq_ref,self.arch.sub_tbin)
         #According to the given dm value, The time correction for each frequency channel is calculated
-        self.t_delays = (4.148808 * self.dm * (self.arch.dat_freq[0] ** -2 - freq_ref ** -2) * 1e3 / self.arch.sub_tbin).astype(np.int64)
+        self.t_delays = (4.148808 * self.dm * (self.dat_freq ** -2 - freq_ref ** -2) * 1e3 / self.arch.sub_tbin).astype(np.int64)
         # the delay time between the highest channel center frequency and the lowest center frequency
         self.max_delay = np.max(self.t_delays)
 
