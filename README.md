@@ -26,7 +26,7 @@ datetime
 
 
 
-## Cut Psrfits Dat
+## Cut Psrfits Data
 
 
 
